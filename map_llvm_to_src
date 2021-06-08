@@ -102,10 +102,9 @@ def main():
     constr_json = json.loads(constr.read())
     process_constraint(constr_json, dwarf_map, violated_invariants)
     #print(out_json)
-    res = {'res' : out_json}
     violated_suffix = '_violated' if len(violated_invariants) != 0 else ''
     with open(os.path.join(output_path, 'annotations' + violated_suffix + '.json'), 'w') as oo:
-        oo.write(json.dumps(res))
+        oo.write(json.dumps(out_json))
 
 
 if __name__ == '__main__':
