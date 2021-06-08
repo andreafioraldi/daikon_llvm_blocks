@@ -4,20 +4,20 @@ import subprocess
 import sys
 import os
 
-be_quite = os.getenv("INVSCOV_QUIET") is not None
+be_quite = os.getenv("LLVMDAIKON_QUIET") is not None
 
 script_dir = os.path.dirname(os.path.realpath(os.path.abspath(__file__)))
 
 is_cxx = "++" in sys.argv[0]
 
 def cc_exec(args):
-    if os.getenv("INVSCOV_CC"):
-        cc_name = os.environ["INVSCOV_CC"]
+    if os.getenv("LLVMDAIKON_CC"):
+        cc_name = os.environ["LLVMDAIKON_CC"]
     else:
         cc_name = "clang"
     if is_cxx:
-        if os.getenv("INVSCOV_CXX"):
-            cc_name = os.environ["INVSCOV_CXX"]
+        if os.getenv("LLVMDAIKON_CXX"):
+            cc_name = os.environ["LLVMDAIKON_CXX"]
         else:
             cc_name = "clang++"
     argv = [cc_name] + args

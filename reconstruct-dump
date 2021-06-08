@@ -5,10 +5,10 @@ import ast
 import sys
 import os
 
-invscov_outpath = os.getenv("INVSCOV_OUTPUT_PATH")
-if invscov_outpath is None:
-    invscov_outpath = "invscov_output"
-    print("WARN: INVSCOV_OUTPUT_PATH env not set, fallback to default 'invscov_output'")
+llvmdaikon_outpath = os.getenv("LLVMDAIKON_OUTPUT_PATH")
+if llvmdaikon_outpath is None:
+    llvmdaikon_outpath = "llvmdaikon_output"
+    print("WARN: LLVMDAIKON_OUTPUT_PATH env not set, fallback to default 'llvmdaikon_output'")
 
 use_comp = True
 if len(sys.argv) > 1 and "nocomp" in sys.argv :
@@ -19,17 +19,17 @@ if len(sys.argv) > 1 and "noranges" in sys.argv :
     use_ranges = False
 
 body = "[\n"
-for fname in os.listdir(invscov_outpath):
+for fname in os.listdir(llvmdaikon_outpath):
     if not fname.endswith(".literal.part"):
         continue
-    path = os.path.join(invscov_outpath, fname)
+    path = os.path.join(llvmdaikon_outpath, fname)
     with open(path) as f:
         body += f.read()
 body += "\n]"
 
 funcs = ast.literal_eval(body)
 
-with open(os.path.join(invscov_outpath, "decls.json"), "w") as f:
+with open(os.path.join(llvmdaikon_outpath, "decls.json"), "w") as f:
     json.dump(funcs, f, indent=2)
 
 def get_type(t):
@@ -50,7 +50,7 @@ def get_kind(v):
 
 structs = {}
 
-outf = open(os.path.join(invscov_outpath, "decls.decls"), "w")
+outf = open(os.path.join(llvmdaikon_outpath, "decls.decls"), "w")
 
 outf.write("""input-language C/C++
 decl-version 2.0

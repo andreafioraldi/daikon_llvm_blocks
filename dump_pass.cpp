@@ -175,9 +175,9 @@ struct BBInfo {
 };
 
 
-struct InvsCovDump {
+struct LLVMDaikonDump {
 
-  InvsCovDump(Module& _M, Function &_F, LoopInfo &_LI, IntraProceduralRA<Cousot> &_RA) : M(_M), F(_F), LI(_LI), RA(_RA) {
+  LLVMDaikonDump(Module& _M, Function &_F, LoopInfo &_LI, IntraProceduralRA<Cousot> &_RA) : M(_M), F(_F), LI(_LI), RA(_RA) {
     initialize();
   }
   
@@ -214,16 +214,16 @@ struct InvsCovDump {
 
   Function* dbgDeclareFn;
 
-  FunctionCallee invscovDumpSignedIntFns[4];
-  FunctionCallee invscovDumpUnsignedIntFns[4];
-  FunctionCallee invscovDumpFloatFn, invscovDumpDoubleFn;
-  FunctionCallee invscovDumpNosenseFn;
+  FunctionCallee llvmdaikonDumpSignedIntFns[4];
+  FunctionCallee llvmdaikonDumpUnsignedIntFns[4];
+  FunctionCallee llvmdaikonDumpFloatFn, llvmdaikonDumpDoubleFn;
+  FunctionCallee llvmdaikonDumpNosenseFn;
   
-  FunctionCallee invscovDumpLockFn, invscovDumpUnlockFn;
-  FunctionCallee invscovDumpEnterPrologueFn, invscovDumpExitPrologueFn,
-                 invscovDumpEpilogueFn, invscovDumpLoopPrologueFn;
+  FunctionCallee llvmdaikonDumpLockFn, llvmdaikonDumpUnlockFn;
+  FunctionCallee llvmdaikonDumpEnterPrologueFn, llvmdaikonDumpExitPrologueFn,
+                 llvmdaikonDumpEpilogueFn, llvmdaikonDumpLoopPrologueFn;
   
-  FunctionCallee invscovAreaIsMappedFn, invscovAreaIsValidFn;
+  FunctionCallee llvmdaikonAreaIsMappedFn, llvmdaikonAreaIsValidFn;
   
   FunctionCallee randFn;
   
@@ -244,22 +244,22 @@ struct InvsCovDump {
   std::string funcname;
   std::ofstream decls;
 	std::ofstream sym_decls;
-  std::string invscov_output_path;
+  std::string llvmdaikon_output_path;
 
 };
 
-void InvsCovDump::initialize() {
+void LLVMDaikonDump::initialize() {
 
-  if (getenv("INVSCOV_OUTPUT_PATH"))
-    invscov_output_path = getenv("INVSCOV_OUTPUT_PATH");
+  if (getenv("LLVMDAIKON_OUTPUT_PATH"))
+    llvmdaikon_output_path = getenv("LLVMDAIKON_OUTPUT_PATH");
   else
-    invscov_output_path = "invscov_output";
+    llvmdaikon_output_path = "llvmdaikon_output";
 
   
   funcname = M.getModuleIdentifier() + ":" + F.getName().str();
   if (funcname.size() >= 2 && funcname[0] == '.' && funcname[1] == '/')
     funcname.erase(0, 2);
-  ReplaceAll(funcname, "\\", "\\\\"); // invscov naming convention
+  ReplaceAll(funcname, "\\", "\\\\"); // llvmdaikon naming convention
   ReplaceAll(funcname, " ", "\\_");
   ReplaceAll(funcname, "/", "_");
 
@@ -298,38 +298,38 @@ void InvsCovDump::initialize() {
   IntTypeSized[2] = Int32Ty;
   IntTypeSized[3] = Int64Ty;
   
-  invscovDumpSignedIntFns[0] = M.getOrInsertFunction("__invscov_dump_i8", VoidTy, Int8PTy, Int8Ty);
-  invscovDumpSignedIntFns[1] = M.getOrInsertFunction("__invscov_dump_i16", VoidTy, Int8PTy, Int16Ty);
-  invscovDumpSignedIntFns[2] = M.getOrInsertFunction("__invscov_dump_i32", VoidTy, Int8PTy, Int32Ty);
-  invscovDumpSignedIntFns[3] = M.getOrInsertFunction("__invscov_dump_i64", VoidTy, Int8PTy, Int64Ty);
+  llvmdaikonDumpSignedIntFns[0] = M.getOrInsertFunction("__llvmdaikon_dump_i8", VoidTy, Int8PTy, Int8Ty);
+  llvmdaikonDumpSignedIntFns[1] = M.getOrInsertFunction("__llvmdaikon_dump_i16", VoidTy, Int8PTy, Int16Ty);
+  llvmdaikonDumpSignedIntFns[2] = M.getOrInsertFunction("__llvmdaikon_dump_i32", VoidTy, Int8PTy, Int32Ty);
+  llvmdaikonDumpSignedIntFns[3] = M.getOrInsertFunction("__llvmdaikon_dump_i64", VoidTy, Int8PTy, Int64Ty);
   
-  invscovDumpUnsignedIntFns[0] = M.getOrInsertFunction("__invscov_dump_u8", VoidTy, Int8PTy, Int8Ty);
-  invscovDumpUnsignedIntFns[1] = M.getOrInsertFunction("__invscov_dump_u16", VoidTy, Int8PTy, Int16Ty);
-  invscovDumpUnsignedIntFns[2] = M.getOrInsertFunction("__invscov_dump_u32", VoidTy, Int8PTy, Int32Ty);
-  invscovDumpUnsignedIntFns[3] = M.getOrInsertFunction("__invscov_dump_u64", VoidTy, Int8PTy, Int64Ty);
+  llvmdaikonDumpUnsignedIntFns[0] = M.getOrInsertFunction("__llvmdaikon_dump_u8", VoidTy, Int8PTy, Int8Ty);
+  llvmdaikonDumpUnsignedIntFns[1] = M.getOrInsertFunction("__llvmdaikon_dump_u16", VoidTy, Int8PTy, Int16Ty);
+  llvmdaikonDumpUnsignedIntFns[2] = M.getOrInsertFunction("__llvmdaikon_dump_u32", VoidTy, Int8PTy, Int32Ty);
+  llvmdaikonDumpUnsignedIntFns[3] = M.getOrInsertFunction("__llvmdaikon_dump_u64", VoidTy, Int8PTy, Int64Ty);
   
-  invscovDumpFloatFn = M.getOrInsertFunction("__invscov_dump_f", VoidTy, Int8PTy, FloatTy);
-  invscovDumpDoubleFn = M.getOrInsertFunction("__invscov_dump_d", VoidTy, Int8PTy, DoublePTy);
+  llvmdaikonDumpFloatFn = M.getOrInsertFunction("__llvmdaikon_dump_f", VoidTy, Int8PTy, FloatTy);
+  llvmdaikonDumpDoubleFn = M.getOrInsertFunction("__llvmdaikon_dump_d", VoidTy, Int8PTy, DoublePTy);
   
-  invscovDumpNosenseFn = M.getOrInsertFunction("__invscov_dump_nosense", VoidTy, Int8PTy);
+  llvmdaikonDumpNosenseFn = M.getOrInsertFunction("__llvmdaikon_dump_nosense", VoidTy, Int8PTy);
   
-  invscovDumpLockFn = M.getOrInsertFunction("__invscov_dump_lock", VoidTy);
-  invscovDumpUnlockFn = M.getOrInsertFunction("__invscov_dump_unlock", VoidTy);
+  llvmdaikonDumpLockFn = M.getOrInsertFunction("__llvmdaikon_dump_lock", VoidTy);
+  llvmdaikonDumpUnlockFn = M.getOrInsertFunction("__llvmdaikon_dump_unlock", VoidTy);
   
   Type* SizeTTy = IntTypeSized[TypeSizeToSizeIndex(LongSize)];
-  invscovDumpEnterPrologueFn = M.getOrInsertFunction("__invscov_dump_enter_prologue", SizeTTy, Int8PTy);
-  invscovDumpExitPrologueFn = M.getOrInsertFunction("__invscov_dump_exit_prologue", VoidTy, Int8PTy, Int32Ty, SizeTTy);
-  invscovDumpEpilogueFn = M.getOrInsertFunction("__invscov_dump_epilogue", VoidTy);
-  invscovDumpLoopPrologueFn = M.getOrInsertFunction("__invscov_dump_loop_prologue", SizeTTy, Int8PTy, Int32Ty);
+  llvmdaikonDumpEnterPrologueFn = M.getOrInsertFunction("__llvmdaikon_dump_enter_prologue", SizeTTy, Int8PTy);
+  llvmdaikonDumpExitPrologueFn = M.getOrInsertFunction("__llvmdaikon_dump_exit_prologue", VoidTy, Int8PTy, Int32Ty, SizeTTy);
+  llvmdaikonDumpEpilogueFn = M.getOrInsertFunction("__llvmdaikon_dump_epilogue", VoidTy);
+  llvmdaikonDumpLoopPrologueFn = M.getOrInsertFunction("__llvmdaikon_dump_loop_prologue", SizeTTy, Int8PTy, Int32Ty);
   
-  invscovAreaIsMappedFn = M.getOrInsertFunction("__invscov_area_is_mapped", Int8Ty, Int8PTy, SizeTTy);
-  invscovAreaIsValidFn = M.getOrInsertFunction("__invscov_area_is_valid", Int8Ty, Int8PTy, SizeTTy);
+  llvmdaikonAreaIsMappedFn = M.getOrInsertFunction("__llvmdaikon_area_is_mapped", Int8Ty, Int8PTy, SizeTTy);
+  llvmdaikonAreaIsValidFn = M.getOrInsertFunction("__llvmdaikon_area_is_valid", Int8Ty, Int8PTy, SizeTTy);
   
   randFn = M.getOrInsertFunction("rand", Int32Ty);
 
 }
 
-bool InvsCovDump::dumpVariable(IRBuilder<>& IRB, std::map<Value*, int>& Comp, std::string prefix_name, Value* V, SourceVarRecovery* svr) {
+bool LLVMDaikonDump::dumpVariable(IRBuilder<>& IRB, std::map<Value*, int>& Comp, std::string prefix_name, Value* V, SourceVarRecovery* svr) {
 
   bool FunctionModified = false;
   Type *T = V->getType();
@@ -482,9 +482,9 @@ bool InvsCovDump::dumpVariable(IRBuilder<>& IRB, std::map<Value*, int>& Comp, st
       Value *I = IRB.CreateBitCast(V, IntTypeSized[SizeIndex]);
       CallInst* CI;
       if (Signed)
-        CI = IRB.CreateCall(invscovDumpSignedIntFns[SizeIndex], ArrayRef<Value*>{N, I});
+        CI = IRB.CreateCall(llvmdaikonDumpSignedIntFns[SizeIndex], ArrayRef<Value*>{N, I});
       else
-        CI = IRB.CreateCall(invscovDumpUnsignedIntFns[SizeIndex], ArrayRef<Value*>{N, I});
+        CI = IRB.CreateCall(llvmdaikonDumpUnsignedIntFns[SizeIndex], ArrayRef<Value*>{N, I});
       CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
       
       FunctionModified = true;
@@ -503,7 +503,7 @@ bool InvsCovDump::dumpVariable(IRBuilder<>& IRB, std::map<Value*, int>& Comp, st
     //
     //  Value *N = IRB.CreateGlobalStringPtr(name);
     //  Value *I = IRB.CreateBitCast(V, FloatTy);
-    //  CallInst* CI = IRB.CreateCall(invscovDumpFloatFn, ArrayRef<Value*>{N, I});
+    //  CallInst* CI = IRB.CreateCall(llvmdaikonDumpFloatFn, ArrayRef<Value*>{N, I});
     //  CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
     //  
     //  FunctionModified = true;
@@ -522,7 +522,7 @@ bool InvsCovDump::dumpVariable(IRBuilder<>& IRB, std::map<Value*, int>& Comp, st
 
     //  Value *N = IRB.CreateGlobalStringPtr(name);
     //  Value *I = IRB.CreateBitCast(V, DoubleTy);
-    //  CallInst* CI = IRB.CreateCall(invscovDumpDoubleFn, ArrayRef<Value*>{N, I});
+    //  CallInst* CI = IRB.CreateCall(llvmdaikonDumpDoubleFn, ArrayRef<Value*>{N, I});
     //  CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
 
     //  FunctionModified = true;
@@ -577,7 +577,7 @@ static void MergeComp(std::map<Value*, int>& Comp, int& CompID, Value* A, Value*
 
 }
 
-bool InvsCovDump::instrumentFunction() {
+bool LLVMDaikonDump::instrumentFunction() {
 
   bool FunctionModified = false;
 
@@ -588,15 +588,15 @@ bool InvsCovDump::instrumentFunction() {
     decls_name = decls_name.substr(0, 200) + "<" + std::to_string((uintptr_t)&F) + ">";
   }
 
-  decls.open(invscov_output_path + "/" + decls_name + "_decls.literal.part");
-	sym_decls.open(invscov_output_path + "/" + decls_name + "_symbols");
+  decls.open(llvmdaikon_output_path + "/" + decls_name + "_decls.literal.part");
+	sym_decls.open(llvmdaikon_output_path + "/" + decls_name + "_symbols");
   if (!decls.good()) {
-    errs() << "FATAL: Failed to open (w) the file '" << invscov_output_path + "/" + decls_name + "_decls.literal.part" << "'\n";
+    errs() << "FATAL: Failed to open (w) the file '" << llvmdaikon_output_path + "/" + decls_name + "_decls.literal.part" << "'\n";
     abort();
   }
 
 	if (!sym_decls.good()) {
-    errs() << "FATAL: Failed to open (w) the file '" << invscov_output_path + "/" + decls_name + "_symbols.literal.part" << "'\n";
+    errs() << "FATAL: Failed to open (w) the file '" << llvmdaikon_output_path + "/" + decls_name + "_symbols.literal.part" << "'\n";
     abort();
 	}
  
@@ -1075,7 +1075,7 @@ bool InvsCovDump::instrumentFunction() {
     
     IRBuilder<> IRB(ThenBlock);
     
-    CallInst* CI = IRB.CreateCall(invscovDumpLockFn);
+    CallInst* CI = IRB.CreateCall(llvmdaikonDumpLockFn);
     CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
     
     std::set<Value*> Dumpeds;
@@ -1091,7 +1091,7 @@ bool InvsCovDump::instrumentFunction() {
     sym_decls << "  \"ppts\": {\n    \"ENTER\": [\n";
 
     Value *N = IRB.CreateGlobalStringPtr(BBname);
-    CallInst *InvNonce = IRB.CreateCall(invscovDumpEnterPrologueFn, ArrayRef<Value*>{N});
+    CallInst *InvNonce = IRB.CreateCall(llvmdaikonDumpEnterPrologueFn, ArrayRef<Value*>{N});
     InvNonce->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
     
     for (size_t i = 0; i < Infos[BB].Locals.size(); ++i) {
@@ -1154,13 +1154,13 @@ bool InvsCovDump::instrumentFunction() {
     sym_decls << "    ]\n";
 
 
-    CI = IRB.CreateCall(invscovDumpEpilogueFn);
+    CI = IRB.CreateCall(llvmdaikonDumpEpilogueFn);
     CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
     
     decls << "    \"EXIT0" << "\": [\n";
     
     Value *I = ConstantInt::get(Int32Ty, 0, true);
-    CI = IRB.CreateCall(invscovDumpExitPrologueFn, ArrayRef<Value*>{N, I, InvNonce});
+    CI = IRB.CreateCall(llvmdaikonDumpExitPrologueFn, ArrayRef<Value*>{N, I, InvNonce});
     CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
     
     Dumpeds.clear();
@@ -1225,10 +1225,10 @@ bool InvsCovDump::instrumentFunction() {
     sym_decls << "\n  }\n},\n";
 
     
-    CI = IRB.CreateCall(invscovDumpEpilogueFn);
+    CI = IRB.CreateCall(llvmdaikonDumpEpilogueFn);
     CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
     
-    CI = IRB.CreateCall(invscovDumpUnlockFn);
+    CI = IRB.CreateCall(llvmdaikonDumpUnlockFn);
     CI->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(*C, None));
 
   }
@@ -1240,11 +1240,11 @@ bool InvsCovDump::instrumentFunction() {
   
 }
 
-class InvsCovDumpFunctionPass : public FunctionPass {
+class LLVMDaikonDumpFunctionPass : public FunctionPass {
 public:
   static char ID;
 
-  explicit InvsCovDumpFunctionPass() : FunctionPass(ID) {}
+  explicit LLVMDaikonDumpFunctionPass() : FunctionPass(ID) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesCFG();
@@ -1253,14 +1253,14 @@ public:
   }
 
   StringRef getPassName() const override {
-    return "InvsCovDumpPass";
+    return "LLVMDaikonDumpPass";
   }
 
   bool runOnFunction(Function &F) override {
     Module &M = *F.getParent();
     LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
     IntraProceduralRA<Cousot> &RA = getAnalysis<IntraProceduralRA<Cousot>>();
-    InvsCovDump DI(M, F, LI, RA);
+    LLVMDaikonDump DI(M, F, LI, RA);
     bool r = DI.instrumentFunction();
     verifyFunction(F);
     return r;
@@ -1268,23 +1268,23 @@ public:
 };
 
 
-char InvsCovDumpFunctionPass::ID = 0;
+char LLVMDaikonDumpFunctionPass::ID = 0;
 
-static void registerInvsCovPass(const PassManagerBuilder &,
+static void registerLLVMDaikonPass(const PassManagerBuilder &,
                                legacy::PassManagerBase &PM) {
 
-  PM.add(new InvsCovDumpFunctionPass());
+  PM.add(new LLVMDaikonDumpFunctionPass());
 
 }
 
-static RegisterStandardPasses RegisterInvsCovPass(
-    PassManagerBuilder::EP_OptimizerLast, registerInvsCovPass);
+static RegisterStandardPasses RegisterLLVMDaikonPass(
+    PassManagerBuilder::EP_OptimizerLast, registerLLVMDaikonPass);
 
-static RegisterStandardPasses RegisterInvsCovPass0(
-    PassManagerBuilder::EP_EnabledOnOptLevel0, registerInvsCovPass);
+static RegisterStandardPasses RegisterLLVMDaikonPass0(
+    PassManagerBuilder::EP_EnabledOnOptLevel0, registerLLVMDaikonPass);
 
-static RegisterPass<InvsCovDumpFunctionPass>
-    X("invscov-dump", "InvsCovDumpPass",
+static RegisterPass<LLVMDaikonDumpFunctionPass>
+    X("llvmdaikon-dump", "LLVMDaikonDumpPass",
       false,
       false
     );
