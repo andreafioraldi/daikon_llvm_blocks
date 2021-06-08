@@ -1,0 +1,112 @@
+#!/usr/bin/env python
+
+import json
+import os
+import sys
+import ast
+
+
+out_json = []
+
+#if output_path is None:
+#	output_path = "llvmdaikon_output"
+#	print("WARN: env LLVMDAIKON_OUTPUT_PATH was not set, writing to 'llvmdaikon_output'")
+
+def find_var(filename, fcn_name, bb, dwarf_map, ir_var):
+    key = filename + ':' + fcn_name + '#%' + bb
+    for dwarf in dwarf_map:
+        if dwarf["name"] == key:
+            parts = dwarf["ppts"]["ENTER"]
+            for part in parts:
+                if part["ir_name"] == ir_var:
+                    return part["name"], part["file"], part["line"]
+    return None, None, None
+
+
+def replace_vars(filename, fcn_name, bb, constr_list, dwarf_map, violated_prefix):
+    global out_json
+    ir_vars = constr_list["vars"]
+    rep = constr_list["rep"]
+    source_vars = []
+    count = 0
+    tmp_dict = {}
+    for ir_var in ir_vars:
+        #single_mapping = parts[i]
+        src_var = find_var(filename, fcn_name, bb, dwarf_map, ir_var)
+        if src_var[0] is not None:
+            #print(src_var)
+            source_vars.append(src_var[0])
+            rep = rep.replace("v{0}".format(count), src_var[0])
+            count += 1
+            tmp_dict = {'filename' : src_var[1], 'line' : src_var[2], 'comment': rep}
+    if '->field' in rep:
+        print("[Warning] Mapping issues")
+    else:
+        if rep.startswith('WRAP_CMP') and 'comment' in tmp_dict:
+            cmp_args = rep[10:-2].split(',')[1]
+            tmp_dict['comment'] = violated_prefix + cmp_args
+        else:
+            tmp_dict['comment'] = violated_prefix + rep
+        out_json.append(tmp_dict)
+        if 'filename' in tmp_dict:
+            print(tmp_dict['comment'] + "in filename " + tmp_dict['filename'])
+            
+
+def is_violated_invariant(violated_invariants, invariant_fcn_id):
+    if len(violated_invariants) == 0:
+        return ''
+
+    invariant_id = invariant_fcn_id[17 : ]
+    if invariant_id in violated_invariants:
+        return 'violated: '
+    return ''
+
+
+def process_constraint(constr_json, dwarf_map, violated_invariants):
+    dwarf_fd = open(dwarf_map, 'r')
+    dwarf_json = json.loads(dwarf_fd.read())
+    for k, v in constr_json.items():
+        filename, other = k.split(':')
+        fcn_name, bb = other.split('#%')
+        constr_list = v["ENTER"]["constrs"]
+        for constraint in constr_list:
+            violated_prefix = is_violated_invariant(violated_invariants, constraint["func"])
+            replace_vars(filename, fcn_name, bb, constraint, dwarf_json, violated_prefix)
+
+
+def get_violated(violated_invariants_path):
+    with open(violated_invariants_path, 'r') as v:
+        id_violated_list = v.read().split(',')
+    return id_violated_list
+
+
+def main():
+    output_path = os.getenv('LLVMDAIKON_OUTPUT_PATH')
+    if output_path is None:
+        print("[Error]: cannot go on without env var 'LLVMDAIKON_OUTPUT_PATH'")
+        sys.exit()
+
+    violated_invariants = []
+    if len(sys.argv) == 2 and sys.argv[1] == "--violated":
+        violated_path = os.path.join(output_path, 'violated.csv')
+        print("Looking for " + violated_path)
+        assert(os.path.isfile(violated_path))
+        violated_invariants = get_violated(violated_path)
+    
+
+    constr_path = os.path.join(output_path, 'constrs.json')
+    dwarf_map = os.path.join(output_path, 'dwarf_decls.json')
+    assert (os.path.isfile(constr_path))
+    assert (os.path.isfile(dwarf_map))
+    constr = open(constr_path, 'r')
+    constr_json = json.loads(constr.read())
+    process_constraint(constr_json, dwarf_map, violated_invariants)
+    #print(out_json)
+    res = {'res' : out_json}
+    violated_suffix = '_violated' if len(violated_invariants) != 0 else ''
+    with open(os.path.join(output_path, 'annotations' + violated_suffix + '.json'), 'w') as oo:
+        oo.write(json.dumps(res))
+
+
+if __name__ == '__main__':
+    main()
