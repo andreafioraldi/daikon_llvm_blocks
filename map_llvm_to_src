@@ -4,9 +4,11 @@ import json
 import os
 import sys
 import ast
+import re
 
 
 out_json = []
+prog = re.compile('v[0-9]')
 
 #if output_path is None:
 #	output_path = "llvmdaikon_output"
@@ -22,6 +24,10 @@ def find_var(filename, fcn_name, bb, dwarf_map, ir_var):
                     return part["name"], part["file"], part["line"]
     return None, None, None
 
+
+def is_good_invariant(invariant):
+  return prog.match(invariant) is None
+  
 
 def replace_vars(filename, fcn_name, bb, constr_list, dwarf_map, violated_prefix):
     global out_json
@@ -41,6 +47,8 @@ def replace_vars(filename, fcn_name, bb, constr_list, dwarf_map, violated_prefix
             tmp_dict = {'filename' : src_var[1], 'line' : src_var[2], 'comment': rep}
     if '->field' in rep:
         print("[Warning] Mapping issues")
+    if not is_good_invariant(rep):
+        print("[Warning] Could not recover the Mapping for some variables in '{0}'".format(rep))
     else:
         if rep.startswith('WRAP_CMP') and 'comment' in tmp_dict:
             cmp_args = rep[10:-2].split(',')[1]
