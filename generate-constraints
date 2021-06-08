@@ -285,5 +285,3 @@ with open(os.path.join(llvmdaikon_outpath, "daikon.txt")) as f:
 
 with open(os.path.join(llvmdaikon_outpath, "constrs.json"), "w") as f:
     json.dump(specs, f, indent=2)
-
-os.system("cd '" + llvmdaikon_outpath + "' && clang-10 -O1 -g -Wno-pointer-sign -Wno-unused-function -c -fPIC constraints.c")

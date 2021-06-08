@@ -22,5 +22,5 @@ An LLVM frontend for Daikon to generate basic-block level invariants.
 + run reconstruct_dwarf
 + run learn_invariants with dumper binary
 + run generate_constraints
-+ run map_llvm_to_src.py
++ run map_llvm_to_src
 + run insert_annotations path/to/project/src [TO BE FIXED]
