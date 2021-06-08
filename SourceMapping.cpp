@@ -163,10 +163,10 @@ SourceType* BaseUpdated = nullptr;
 void copyTypes(SourceType* dst, SourceType* src) {
   if (! dst) {
     dst = new SourceType();
-    errs() << "dst was null\n";
+    //errs() << "dst was null\n";
   }
   if (!src) {
-    errs() << "src was null\n";
+    //errs() << "src was null\n";
     return;
   }
 	dst->name = src->name;
@@ -677,8 +677,8 @@ void BuildExpressionForInstruction(llvm::User *instruction, std::map<Value*, Sou
     }
     else {
       Instruction* Inst = dyn_cast<Instruction>(instruction);
-      errs() << "Instruction to implement yet\n";
-      errs() << "Instruction: " << Inst->getOpcodeName() << "\n";
+      //errs() << "Instruction to implement yet\n";
+      //errs() << "Instruction: " << Inst->getOpcodeName() << "\n";
     }
 
 }

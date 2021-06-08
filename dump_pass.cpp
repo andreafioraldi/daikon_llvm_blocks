@@ -912,7 +912,7 @@ bool LLVMDaikonDump::instrumentFunction() {
 
       if (! isa<DbgValueInst>(&Inst) && ! isa<ReturnInst>(&Inst)) {
         Value* Val = dynamic_cast<Value*>(&Inst);
-        errs() << "Instruction: " << Inst.getOpcodeName() << "\n";
+        //errs() << "Instruction: " << Inst.getOpcodeName() << "\n";
 				DILocation* l = Inst.getDebugLoc();
         //debug_location(l);
         SourceExpr* res = new SourceExpr();
