@@ -13,7 +13,7 @@ if invscov_outpath is None:
     invscov_outpath = "invscov_output"
     print("WARN: INVSCOV_OUTPUT_PATH env not set, fallback to default 'invscov_output'")
 
-daikon_path = os.path.join(script_dir, "..", "daikon.jar")
+daikon_path = os.path.join(script_dir, "daikon.jar")
 if os.getenv("DAIKON_PATH"):
     daikon_path = os.getenv("DAIKON_PATH")
 
