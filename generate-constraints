@@ -5,10 +5,10 @@ import os
 import re
 import json
 
-invscov_outpath = os.getenv("INVSCOV_OUTPUT_PATH")
-if invscov_outpath is None:
-    invscov_outpath = "invscov_output"
-    print("WARN: INVSCOV_OUTPUT_PATH env not set, fallback to default 'invscov_output'")
+llvmdaikon_outpath = os.getenv("LLVMDAIKON_OUTPUT_PATH")
+if llvmdaikon_outpath is None:
+    llvmdaikon_outpath = "llvmdaikon_output"
+    print("WARN: LLVMDAIKON_OUTPUT_PATH env not set, fallback to default 'llvmdaikon_output'")
 
 abort_mode = False
 
@@ -245,19 +245,19 @@ def process_invariant(funcname, ppt, inv):
     params = ", ".join(params)
     fmt = "\"(" + ("%lld, " * len(fmtvals))[:-2] + ")\""
     fmtvals = ", ".join(fmtvals)
-    add_to_spec(funcname, ppt, {"type": len(variables), "rep": constr, "vars": list(map(lambda x: x[1], variables)), "func": "__invscov_constr_%d" % fnid})
+    add_to_spec(funcname, ppt, {"type": len(variables), "rep": constr, "vars": list(map(lambda x: x[1], variables)), "func": "__llvmdaikon_constr_%d" % fnid})
     code += [
 """
-uint32_t __invscov_constr_%d(%s) {
+uint32_t __llvmdaikon_constr_%d(%s) {
   %s(%d, %s, \"%s\", %s, %s);
 }
 """ % (fnid, params, macro, fnid, constr, (funcname + "[" + ppt + "]: " + " ".join(inv)).replace("\\", "\\\\").replace("\"", "\\\""), fmt, fmtvals)]
     fnid += 1
 
-def process_invscov_out(invscov):
-    invscov = invscov.replace("Exiting Daikon.\n", "")
-    invscov = invscov.split("===========================================================================\n")[1:]
-    for invs in invscov:
+def process_llvmdaikon_out(llvmdaikon):
+    llvmdaikon = llvmdaikon.replace("Exiting Daikon.\n", "")
+    llvmdaikon = llvmdaikon.split("===========================================================================\n")[1:]
+    for invs in llvmdaikon:
         invs = invs.split("\n")
         funcname = invs[0].split("():::")[0]
         ppt = invs[0].split("():::")[1]
@@ -267,11 +267,11 @@ def process_invscov_out(invscov):
             if len(i) == 0: continue
             process_invariant(funcname, ppt, i)
 
-if os.path.exists(os.path.join(invscov_outpath, "blacklist.json")):
-    with open(os.path.join(invscov_outpath, "blacklist.json")) as f:
+if os.path.exists(os.path.join(llvmdaikon_outpath, "blacklist.json")):
+    with open(os.path.join(llvmdaikon_outpath, "blacklist.json")) as f:
         blacklist = json.load(f)
 
-with open(os.path.join(invscov_outpath, "decls.json")) as f:
+with open(os.path.join(llvmdaikon_outpath, "decls.json")) as f:
     body = json.load(f)
     for data in body:
         var_types[data["name"]] = {}
@@ -280,10 +280,10 @@ with open(os.path.join(invscov_outpath, "decls.json")) as f:
             for v in data["ppts"][ppt]:
                 var_types[data["name"]][ppt][v["name"]] = v["type"]
 
-with open(os.path.join(invscov_outpath, "daikon.txt")) as f:
-    process_invscov_out(f.read())
+with open(os.path.join(llvmdaikon_outpath, "daikon.txt")) as f:
+    process_llvmdaikon_out(f.read())
 
-with open(os.path.join(invscov_outpath, "constraints.c"), "w") as f:
+with open(os.path.join(llvmdaikon_outpath, "constraints.c"), "w") as f:
     f.write("#include \"stdint.h\"\n")
     f.write("#include \"stdio.h\"\n")
     f.write("#include \"stdlib.h\"\n")
@@ -296,7 +296,7 @@ with open(os.path.join(invscov_outpath, "constraints.c"), "w") as f:
  \\
   if (!(inv)) { \\
     fprintf(stderr, "VIOLATED INVARIANT: %s -- " fmt "\\n", msg, __VA_ARGS__); \\
-    if (!getenv("INVSCOV_NO_ABORT")) abort(); \\
+    if (!getenv("LLVMDAIKON_NO_ABORT")) abort(); \\
   } \\
  \\
 } while(0)
@@ -357,13 +357,13 @@ static int print_violations = 0;
 #define WRAP_CMP8(id, cmp, a, b) (cmp)
 
 __attribute__((constructor)) static void init() {
-    print_violations = !!getenv("INVSCOV_PRINT");
+    print_violations = !!getenv("LLVMDAIKON_PRINT");
 }
 
 """)
     f.write("".join(code) + "\n")
 
-with open(os.path.join(invscov_outpath, "constrs.json"), "w") as f:
+with open(os.path.join(llvmdaikon_outpath, "constrs.json"), "w") as f:
     json.dump(specs, f, indent=2)
 
-os.system("cd '" + invscov_outpath + "' && clang-10 -O1 -g -Wno-pointer-sign -Wno-unused-function -c -fPIC constraints.c")
+os.system("cd '" + llvmdaikon_outpath + "' && clang-10 -O1 -g -Wno-pointer-sign -Wno-unused-function -c -fPIC constraints.c")

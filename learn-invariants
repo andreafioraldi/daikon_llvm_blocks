@@ -8,10 +8,10 @@ import shlex
 
 script_dir = os.path.dirname(os.path.realpath(os.path.abspath(__file__)))
 
-invscov_outpath = os.getenv("INVSCOV_OUTPUT_PATH")
-if invscov_outpath is None:
-    invscov_outpath = "invscov_output"
-    print("WARN: INVSCOV_OUTPUT_PATH env not set, fallback to default 'invscov_output'")
+llvmdaikon_outpath = os.getenv("LLVMDAIKON_OUTPUT_PATH")
+if llvmdaikon_outpath is None:
+    llvmdaikon_outpath = "llvmdaikon_output"
+    print("WARN: LLVMDAIKON_OUTPUT_PATH env not set, fallback to default 'llvmdaikon_output'")
 
 daikon_path = os.path.join(script_dir, "daikon.jar")
 if os.getenv("DAIKON_PATH"):
@@ -24,5 +24,5 @@ if len(sys.argv) < 3:
 corpus = sys.argv[1]
 command = " ".join(shlex.quote(x) for x in sys.argv[2:])
 
-print('java -cp "' + daikon_path + '" daikon.Daikon "' + invscov_outpath + '/decls.decls" --corpus "' + corpus + '" --cmd ' + shlex.quote(command) + ' --invs "' + invscov_outpath + '/daikon.txt"\n')
-os.system('time java -cp "' + daikon_path + '" daikon.Daikon "' + invscov_outpath + '/decls.decls" --corpus "' + corpus + '" --cmd ' + shlex.quote(command) + ' --invs "' + invscov_outpath + '/daikon.txt"')
+print('java -cp "' + daikon_path + '" daikon.Daikon "' + llvmdaikon_outpath + '/decls.decls" --corpus "' + corpus + '" --cmd ' + shlex.quote(command) + ' --invs "' + llvmdaikon_outpath + '/daikon.txt"\n')
+os.system('time java -cp "' + daikon_path + '" daikon.Daikon "' + llvmdaikon_outpath + '/decls.decls" --corpus "' + corpus + '" --cmd ' + shlex.quote(command) + ' --invs "' + llvmdaikon_outpath + '/daikon.txt"')
