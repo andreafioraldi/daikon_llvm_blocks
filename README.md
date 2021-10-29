@@ -30,6 +30,8 @@ An LLVM frontend for Daikon to generate basic-block level invariants.
 
 The script ```analyser.py``` provides an easy way to automate the previous steps. Command line example:
 
-  ./analyser.py --output /tmp/res --project /home/mantovan/Repositories/file --corpus /home/mantovan/Desktop/ddg/afl/solidity/output/default/queue/ --configure "./configure --disable-shared" --compile make --dumper "/home/mantovan/Repositories/file/src/file @@"
+```
+./analyser.py --output /tmp/res --project SRC_FOLDER --corpus ./FUZZER_OUTPUT/default/queue/ --configure "./configure --disable-shared" --compile make --dumper "SRC_FOLDER/BINARY @@"
+```
 
 It only assumes to running the fuzzing campaign before the actual analysis
