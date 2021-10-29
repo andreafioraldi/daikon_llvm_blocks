@@ -1,4 +1,4 @@
-# daikon_llvm_blocks
+# Daikon LLVM frontend for block invariants
 
 An LLVM frontend for Daikon to generate basic-block level invariants.
 
